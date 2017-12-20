@@ -1,0 +1,7 @@
+Library/
+obj/
+Temp/
+Assembly-CSharp.csproj
+*.apk
+Assembly-CSharp-Editor.csproj
+CannonShot*
