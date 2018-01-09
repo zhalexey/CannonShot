@@ -11,20 +11,22 @@ public class GameController : MonoBehaviour {
 	public static GameObject root;
 
 	private const float SPAWN_TIME = 1f;
-
 	public const string ENEMY_TAG = "Enemy";
-
 	private const float ENEMY_SPEED = 2f;
+	public const string BULLET_TAG = "Bullet";
+	public const string EXPLOSION_TAG = "Explosion";
+	public const string ENEMY_CRASH_TAG = "EnemyCrash";
 
-	public GameObject enemyPrefab;
 
 	private float currentTime;
 	private GameState state;
 
+	void Awake() {
+		root = new GameObject ("Root");
+	}
 
 	void Start () {
 		currentTime = Time.time;
-		root = new GameObject ("Root");
 		state = GameState.Started;
 	}
 
@@ -56,10 +58,10 @@ public class GameController : MonoBehaviour {
 		float angle = GeomHelper.GetAngle (-position);
 		Quaternion rotation = Quaternion.AngleAxis (angle, Vector3.forward);
 
-		GameObject enemy = Instantiate (enemyPrefab, position, rotation);
-		enemy.transform.parent = root.transform;
-		enemy.transform.GetComponent<Rigidbody2D>().velocity = -position.normalized * ENEMY_SPEED;
-
+		GameObject enemy = ScriptManager.GameObjectPool.GetEnemy ();
+		enemy.transform.position = position;
+		enemy.transform.rotation = rotation;
+		enemy.transform.GetComponent<Rigidbody2D>().velocity = -position.normalized * ENEMY_SPEED * Random.Range(0.5f, 1f);
 	}
 
 	private Vector3 GetEnemyRandomPosition() {

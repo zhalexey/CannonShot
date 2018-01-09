@@ -6,9 +6,9 @@ using UnityEngine.SceneManagement;
 public class ScriptManager {
 
 	private static Dictionary<string, GameObject> cache = new Dictionary<string, GameObject>();
-	private const string MENU_CANVAS = "MenuCanvas";
-	private const string GAME_MANAGER = "GameManager";
+
 	private const string MENU_CANVAS_PATH = "Prefabs/Menu/MenuCanvas";
+	private const string GAME_MANAGER = "GameManager";
 
 	static ScriptManager() {
 		SceneManager.activeSceneChanged += ResetCache;
@@ -20,21 +20,64 @@ public class ScriptManager {
 
 	public static GameController GameController {
 		get {
-			return (GameController)GameObject.Find (GAME_MANAGER).GetComponent<GameController>();
+			return (GameController)GetInstanceByName(GAME_MANAGER).GetComponent<GameController>();
+		}
+	}
+
+	public static GameObjectPool GameObjectPool {
+		get {
+			return (GameObjectPool)GetInstanceByName(GAME_MANAGER).GetComponent<GameObjectPool>();
 		}
 	}
 
 	public static MenuCanvasController MenuCanvasController {
 		get {
-			GameObject prefabInstance = null;
-			cache.TryGetValue (MENU_CANVAS, out prefabInstance);
-			if (prefabInstance == null) {
-				GameObject prefab = Resources.Load (MENU_CANVAS_PATH) as GameObject;
-				prefabInstance = MonoBehaviour.Instantiate (prefab);
-				cache.Add (MENU_CANVAS, prefab);
-			}
-			return (MenuCanvasController)prefabInstance.GetComponent<MenuCanvasController>();
+			return GetPrefabInstanceByPath(MENU_CANVAS_PATH).GetComponent<MenuCanvasController>();
 		}
+	}
+
+
+	private static GameObject GetPrefabInstanceByPath(string prefabPath) {
+		var prefabName = GetInstanceName (prefabPath);
+		var prefabInstance = GetInstanceByNameUnchecked (prefabName);
+
+		if (!prefabInstance) {
+			prefabInstance = UnityEngine.MonoBehaviour.Instantiate (Resources.Load (prefabPath)) as GameObject;
+			prefabInstance.name = prefabName;
+			cache.Add (prefabName, prefabInstance);
+		}
+
+		if (!prefabInstance) {
+			throw new UnityException (prefabName + " prefab is not found on path = " + prefabPath);
+		}
+		return prefabInstance;
+	}
+
+
+	private static GameObject GetInstanceByName(string prefabName) {
+		var instance = GetInstanceByNameUnchecked (prefabName);
+		if (!instance) {
+			throw new UnityException (prefabName + " instance is not found");
+		}
+		return instance;
+	}
+
+
+	private static GameObject GetInstanceByNameUnchecked (string instanceName)
+	{
+		GameObject instance = null;
+		cache.TryGetValue (instanceName, out instance);
+		if (instance != null) {
+			return instance;
+		}
+		return GameObject.Find (instanceName);
+	}
+
+
+	private static string GetInstanceName (string prefabPath)
+	{
+		string[] path = prefabPath.Split ('/');
+		return path [path.Length - 1];
 	}
 
 }

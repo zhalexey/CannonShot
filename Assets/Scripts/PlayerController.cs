@@ -10,7 +10,6 @@ public class PlayerController : MonoBehaviour {
 	private const float RUDE_ROTATION_SPEED = 5f;
 	private const float PRECISE_ROTATION_SPEED = 0.2f;
 
-	public GameObject bulletPrefab;
 	public GameObject crossHairPrefab;
 	public GameObject playerCrashParticle;
 	public GameObject explosionParticle;
@@ -51,12 +50,16 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	private void Fire() {
-		GameObject bullet = Instantiate(bulletPrefab);
+		GameObject bullet = ScriptManager.GameObjectPool.GetBullet ();
 		bullet.transform.position = GetCannonSidePosition ();
 		bullet.transform.GetComponent<Rigidbody2D> ().velocity = GetCannonSidePosition().normalized * BULLET_FORCE;
-		bullet.transform.parent = GameController.root.transform;
-		Destroy (bullet, BULLET_LIFETIME);
+		StartCoroutine (ScriptManager.GameObjectPool.Destroy(bullet, BULLET_LIFETIME));
 		SoundController.instance.Fire ();
+	}
+
+	private IEnumerator DestroyBullet(GameObject bullet, float time) {
+		yield return new WaitForSeconds (time);
+		bullet.SetActive (false);
 	}
 
 	private Vector2 GetCannonSidePosition ()
